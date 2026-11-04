@@ -37,6 +37,14 @@ h2{font-size:1.2rem;margin:26px 0 10px}
 .tot{display:flex;justify-content:space-between;font-size:1.25rem;font-weight:700;padding-top:12px;color:var(--ac)}
 input,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;margin-top:8px}
 .empty{color:var(--mut)}
+.opt{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.opt label{flex:1;min-width:150px;border:1px solid var(--bd);border-radius:10px;padding:10px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.opt label:has(input:checked){border-color:var(--ac);background:var(--ac2)}
+input[type=radio]{width:auto;margin:0}
+.lbl{display:block;margin-top:14px;font-size:.85rem;color:var(--mut)}
+.err{color:#d33;margin:8px 0 0;font-size:.9rem}
+.info{background:var(--ac2);border-radius:10px;padding:10px;margin-top:10px;font-size:.9rem}
+select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;margin-top:8px}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;font-family:system-ui,sans-serif;z-index:5}
 .bar b{color:var(--ac);font-size:1.15rem}
 </style>
@@ -54,11 +62,27 @@ input,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:
 <div class="sum" id="sum">
 <h2>Ringkasan Pesanan</h2>
 <div id="lines"></div>
+<div class="row" id="ongkirRow" hidden><span>Ongkir</span><span id="ongkir"></span></div>
 <div class="tot"><span>Total</span><span id="total">Rp 0</span></div>
-<input id="nama" placeholder="Nama Anda">
+<span class="lbl">Data pemesan</span>
+<input id="nama" placeholder="Nama lengkap">
+<input id="hp" type="tel" placeholder="No. HP / WhatsApp">
+<span class="lbl">Pengambilan pesanan</span>
+<div class="opt"><label><input type="radio" name="mt" id="antar" checked> 🚚 Antar ke alamat</label><label><input type="radio" name="mt" id="ambil"> 🏪 Ambil sendiri</label></div>
+<div id="alamatBox">
+<textarea id="alamat" rows="2" placeholder="Alamat lengkap (jalan, nomor, RT/RW)"></textarea>
+<input id="kota" placeholder="Kecamatan / Kota">
+<input id="patokan" placeholder="Patokan (opsional)">
+<span class="lbl">Perkiraan jarak dari toko (menentukan ongkir)</span>
+<select id="jarak"></select>
+</div>
+<div id="ambilBox" class="info" hidden></div>
+<span class="lbl">Tanggal kirim / ambil</span>
+<input id="tgl" type="date">
 <textarea id="cat" rows="2" placeholder="Catatan / ucapan kartu (opsional)"></textarea>
+<p class="err" id="err"></p>
 <p style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0">
-<a class="btn" id="wa" target="_blank" rel="noopener" style="text-decoration:none">Pesan via WhatsApp</a>
+<a class="btn" id="wa" target="_blank" rel="noopener" style="text-decoration:none">Kirim Pesanan ke Contact Person</a>
 <button class="btn ghost" id="reset">Kosongkan</button></p>
 </div>
 </div>
@@ -66,7 +90,13 @@ input,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:
 
 <script>
 // ====== EDIT DI SINI: nomor WhatsApp (format 62...), paket, dan barang ======
-var WA="6282140878507";
+var WA="6281234567890";
+var CP="Kak Sari"; // nama contact person
+var LOKASI="Jl. Contoh No. 10, Surabaya (09.00-17.00)"; // lokasi ambil pesanan
+// Ongkir berdasarkan jarak. h:0 = gratis, h:null = dikonfirmasi admin
+var ONGKIR=[{l:"Kurang dari 2 km",h:0},{l:"2 - 5 km",h:5000},{l:"5 - 10 km",h:10000},{l:"Lebih dari 10 km",h:null}];
+// Rekap ke Google Sheets: tempel URL Web App dari Apps Script di sini (kosongkan jika belum dipakai)
+var SHEET_URL="https://script.google.com/macros/s/AKfycbx0DuSNIILZb16nmsG8y8l89OSYliGeIMxwJqKyDrTSM_JMiQvXpZ9aUP67t_UBHgt1bA/exec";
 var PAKET=[
 {id:"p1",e:"🍪",n:"Hampers Klasik",d:"Kue kering, teh, dan sirup dalam box cantik",h:150000},
 {id:"p2",e:"🍫",n:"Hampers Cokelat",d:"Aneka cokelat premium dan kartu ucapan",h:225000},
@@ -80,7 +110,7 @@ var BARANG=[
 {g:"Tambahan",i:[{id:"t1",e:"🕯️",n:"Lilin Aromaterapi",h:60000},{id:"t2",e:"💌",n:"Kartu Ucapan",h:10000}]}];
 // ============================================================
 var all={};PAKET.forEach(function(p){all[p.id]=p});BARANG.forEach(function(g){g.i.forEach(function(x){all[x.id]=x})});
-var cart={};
+var cart={},last={};
 function rp(n){return "Rp "+n.toLocaleString("id-ID")}
 function $(i){return document.getElementById(i)}
 
@@ -89,9 +119,20 @@ function render(){
  $("custom").innerHTML=BARANG.map(function(g){return '<h2>'+g.g+'</h2><div class="grid">'+g.i.map(function(x){var q=cart[x.id]||0;return '<div class="card'+(q?' sel':'')+'"><div class="em">'+x.e+'</div><h3>'+x.n+'</h3><div class="pr">'+rp(x.h)+'</div>'+ctrl(x.id,q)+'</div>'}).join("")+'</div>'}).join("");
  var ids=Object.keys(cart),tot=0,n=0;
  $("lines").innerHTML=ids.length?ids.map(function(id){var x=all[id],q=cart[id],s=x.h*q;tot+=s;n+=q;return '<div class="row"><span>'+x.e+' '+x.n+' × '+q+'</span><span>'+rp(s)+'</span></div>'}).join(""):'<p class="empty">Belum ada pilihan. Klik “Tambah” pada hampers atau barang di atas.</p>';
- $("total").textContent=rp(tot);$("bt").textContent=rp(tot);$("cnt").textContent=n;
- var msg="Halo, saya ingin memesan hampers:%0A"+ids.map(function(id){return "- "+all[id].n+" x"+cart[id]+" = "+rp(all[id].h*cart[id])}).join("%0A")+"%0A%0ATotal: "+rp(tot)+"%0ANama: "+encodeURIComponent($("nama").value)+"%0ACatatan: "+encodeURIComponent($("cat").value);
- $("wa").href=ids.length?"https://wa.me/"+WA+"?text="+msg.replace(/ /g,"%20").replace(/\n/g,"%0A"):"#sum";
+ var m=$("antar").checked,ong=0,ongTxt="";
+ if(m){var o=ONGKIR[$("jarak").value||0];ong=o.h||0;ongTxt=o.h===null?"Dikonfirmasi admin":(o.h?rp(o.h):"Gratis")}
+ var grand=tot+ong;
+ last={tot:tot,ong:ong,ongTxt:ongTxt,grand:grand};
+ $("ongkirRow").hidden=!(m&&ids.length);$("ongkir").textContent=ongTxt;
+ $("total").textContent=rp(grand);$("bt").textContent=rp(grand);$("cnt").textContent=n;
+ $("alamatBox").hidden=!m;$("ambilBox").hidden=m;$("ambilBox").textContent="Lokasi ambil: "+LOKASI;
+ var L=["Halo "+CP+", saya ingin memesan hampers:","","*Pesanan*"];
+ ids.forEach(function(id){L.push("- "+all[id].n+" x"+cart[id]+" = "+rp(all[id].h*cart[id]))});
+ L.push("","Subtotal: "+rp(tot));if(m)L.push("Ongkir ("+ONGKIR[$("jarak").value||0].l+"): "+ongTxt);
+ L.push("*Total: "+rp(grand)+(ongTxt==="Dikonfirmasi admin"?" + ongkir":"")+"*","","*Data Pemesan*","Nama: "+$("nama").value,"No. HP: "+$("hp").value,"Metode: "+(m?"Diantar":"Ambil sendiri"));
+ if(m){L.push("Alamat: "+$("alamat").value,"Kecamatan/Kota: "+$("kota").value,"Patokan: "+($("patokan").value||"-"))}else{L.push("Lokasi ambil: "+LOKASI)}
+ L.push("Tanggal "+(m?"kirim":"ambil")+": "+($("tgl").value||"-"),"Catatan: "+($("cat").value||"-"),"","Mohon konfirmasi ketersediaan dan info pembayaran. Terima kasih!");
+ $("wa").href="https://wa.me/"+WA+"?text="+encodeURIComponent(L.join("\n"));
 }
 function ctrl(id,q){return q?'<div class="qty"><button data-a="-" data-id="'+id+'">−</button><b>'+q+'</b><button data-a="+" data-id="'+id+'">+</button></div>':'<button class="btn" data-a="+" data-id="'+id+'">Tambah</button>'}
 document.addEventListener("click",function(e){
@@ -99,8 +140,24 @@ document.addEventListener("click",function(e){
  if(t.dataset&&t.dataset.a){var id=t.dataset.id;cart[id]=(cart[id]||0)+(t.dataset.a==="+"?1:-1);if(cart[id]<=0)delete cart[id];render()}
  if(t.classList.contains("tab")){document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("on",b===t)});$("paket").hidden=t.dataset.t!=="paket";$("custom").hidden=t.dataset.t!=="custom"}
 });
-$("reset").onclick=function(){cart={};render()};
-$("nama").oninput=$("cat").oninput=render;
+function cek(){
+ if(!Object.keys(cart).length)return "Pilih minimal satu hampers atau barang dulu.";
+ if(!$("nama").value.trim())return "Nama wajib diisi.";
+ if(!$("hp").value.trim())return "No. HP wajib diisi.";
+ if($("antar").checked&&(!$("alamat").value.trim()||!$("kota").value.trim()))return "Alamat lengkap dan kecamatan/kota wajib diisi untuk pengantaran.";
+ return ""}
+function kirimSheet(){
+ if(!SHEET_URL)return
+ var m=$("antar").checked;
+ var d={nama:$("nama").value,hp:$("hp").value,metode:m?"Diantar":"Ambil sendiri",alamat:m?$("alamat").value:"",kota:m?$("kota").value:"",patokan:m?$("patokan").value:"",jarak:m?ONGKIR[$("jarak").value||0].l:"",tanggal:$("tgl").value,catatan:$("cat").value,pesanan:Object.keys(cart).map(function(id){return all[id].n+" x"+cart[id]}).join("; "),subtotal:last.tot,ongkir:m?last.ongTxt:"",total:last.grand};
+ try{fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(d),keepalive:true}).catch(function(){})}catch(x){}
+}
+$("wa").onclick=function(e){var er=cek();$("err").textContent=er;if(er){e.preventDefault();return}kirimSheet()};
+$("reset").onclick=function(){cart={};$("err").textContent="";render()};
+["nama","hp","alamat","kota","patokan","tgl","cat"].forEach(function(i){$(i).oninput=render});
+$("antar").onchange=$("ambil").onchange=render;
+$("jarak").innerHTML=ONGKIR.map(function(o,i){return '<option value="'+i+'">'+o.l+' - '+(o.h===null?'ongkir dikonfirmasi admin':o.h?rp(o.h):'Gratis ongkir')+'</option>'}).join("");
+$("jarak").onchange=render;
 render();
 </script>
 </body>
