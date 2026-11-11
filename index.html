@@ -48,7 +48,21 @@ select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;bac
 .qris{text-align:center}
 .qris img{max-width:260px;width:100%;border-radius:12px;border:1px solid var(--bd);background:#fff}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;font-family:system-ui,sans-serif;z-index:5}
-.bar b{color:var(--ac);font-size:1.15rem}
+.em {
+    font-size: 2.6rem;
+    text-align: center;
+    background: var(--ac2);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.foto-produk {
+    display: block;
+    width: 100%;
+    height: 180px;
+    object-fit: contain;
+    border-radius: 12px;
+}
 </style>
 </head>
 <body>
@@ -105,16 +119,18 @@ var ONGKIR=[{l:"Kurang dari 2 km",h:0},{l:"2 - 5 km",h:5000},{l:"5 - 10 km",h:10
 var SHEET_URL="https://script.google.com/macros/s/AKfycbwHhoXe9_YfnW7UE7xApNRUxiNLMZow1CHJ03SBMKGkNPvIVCTOO0D-kHYGW1_vnWsIPA/exec";
 var QRIS_IMG="qris.jpeg";
 var PAKET=[
-{id:"p1",e:"🍪",n:"Hampers Klasik",d:"Kue kering, teh, dan sirup dalam box cantik",h:15000},
-{id:"p2",e:"🍫",n:"Hampers Cokelat",d:"Aneka cokelat premium dan kartu ucapan",h:22500},
-{id:"p3",e:"☕",n:"Hampers Kopi & Teh",d:"Kopi, teh, dan kue pelengkap",h:18500},
-{id:"p4",e:"👑",n:"Hampers Premium",d:"Kurma, madu, cokelat, dan kue pilihan",h:45000},
-{id:"p5",e:"🧸",n:"Hampers Bayi",d:"Perlengkapan bayi lembut dan hadiah kecil",h:27500},
-{id:"p6",e:"🌿",n:"Hampers Sehat",d:"Madu, teh herbal, dan kacang pilihan",h:32000}];
+{id:"p1",e:"🍪",n:"Hampers Klasik",d:"",h:30000},
+{id:"p2",e:"🍫",n:"Hampers Cokelat",d:"",h:45000},
+{id:"p3",e:"☕",n:"Hampers Kopi & Teh",d:"",h:25000},
+{id:"p4",e:"💐",n:"Hampers Premium",d:"",h:50000},
+{id:"p5",e:"hampersbuah.jpeg",n:"Hampers Buah",d:"Bisa request buah",h:85000},
+{id:"p6",e:"hampersnastar.jpeg",n:"Hampers Nastar",d:"Kue nastar, dan kue pilihan",h:45000},
+{id:"p7",e:"buketbuah.jpeg",n:"Bucket Buah",d:"Bisa request buah",h:27500},
+{id:"p8",e:"buketbunga.jpeg",n:"Bucket Bunga",d:"Bunga pilihan",h:32000}];
 var BARANG=[
-{g:"Kemasan",i:[{id:"b1",e:"📦",n:"Box Standar",h:25000},{id:"b2",e:"🎀",n:"Box Premium",h:50000}]},
-{g:"Makanan & Minuman",i:[{id:"m1",e:"🍪",n:"Kue Kering",h:65000},{id:"m2",e:"🍫",n:"Cokelat",h:45000},{id:"m3",e:"🍵",n:"Teh",h:38000},{id:"m4",e:"☕",n:"Kopi",h:55000},{id:"m5",e:"🍯",n:"Madu",h:85000},{id:"m6",e:"🌴",n:"Kurma",h:70000},{id:"m7",e:"🥤",n:"Sirup",h:48000}]},
-{g:"Tambahan",i:[{id:"t1",e:"🕯️",n:"Lilin Aromaterapi",h:60000},{id:"t2",e:"💌",n:"Kartu Ucapan",h:10000}]}];
+{g:"Kemasan",i:[{id:"b1",e:"📦",n:"Box Standar",h:5000},{id:"b2",e:"🎀",n:"Box Premium",h:15000}]},
+{g:"Makanan & Minuman",i:[{id:"m1",e:"🍪",n:"Kue Kering",h:6500},{id:"m2",e:"🍫",n:"Cokelat",h:15000},{id:"m3",e:"🍵",n:"Teh",h:38000},{id:"m4",e:"☕",n:"Kopi",h:55000},{id:"m5",e:"🍯",n:"Madu",h:85000},{id:"m6",e:"🌴",n:"Kurma",h:70000},{id:"m7",e:"🥤",n:"Sirup",h:48000}]},
+{g:"Tambahan",i:[{id:"t1",e:"🕯️",n:"Lilin Aromaterapi",h:6000},{id:"t2",e:"💌",n:"Kartu Ucapan",h:5000}]}];
 // ============================================================
 var all={};PAKET.forEach(function(p){all[p.id]=p});BARANG.forEach(function(g){g.i.forEach(function(x){all[x.id]=x})});
 var cart={},last={};
@@ -122,7 +138,7 @@ function rp(n){return "Rp "+n.toLocaleString("id-ID")}
 function $(i){return document.getElementById(i)}
 
 function render(){
- $("paket").innerHTML=PAKET.map(function(p){var q=cart[p.id]||0;return '<div class="card'+(q?' sel':'')+'"><div class="em">'+p.e+'</div><h3>'+p.n+'</h3><small>'+p.d+'</small><div class="pr">'+rp(p.h)+'</div>'+ctrl(p.id,q)+'</div>'}).join("");
+ $("paket").innerHTML=PAKET.map(function(p){var q=cart[p.id]||0;return '<div class="card'+(q?' sel':'')+'"><div class="em">'+(p.e.includes(".jpeg") || p.e.includes(".jpg") || p.e.includes(".png") ? '<img src="'+p.e+'" class="foto-produk">' : p.e)+'</div><h3>'+p.n+'</h3><small>'+p.d+'</small><div class="pr">'+rp(p.h)+'</div>'+ctrl(p.id,q)+'</div>'}).join("");
  $("custom").innerHTML=BARANG.map(function(g){return '<h2>'+g.g+'</h2><div class="grid">'+g.i.map(function(x){var q=cart[x.id]||0;return '<div class="card'+(q?' sel':'')+'"><div class="em">'+x.e+'</div><h3>'+x.n+'</h3><div class="pr">'+rp(x.h)+'</div>'+ctrl(x.id,q)+'</div>'}).join("")+'</div>'}).join("");
  var ids=Object.keys(cart),tot=0,n=0;
  $("lines").innerHTML=ids.length?ids.map(function(id){var x=all[id],q=cart[id],s=x.h*q;tot+=s;n+=q;return '<div class="row"><span>'+x.e+' '+x.n+' × '+q+'</span><span>'+rp(s)+'</span></div>'}).join(""):'<p class="empty">Belum ada pilihan. Klik “Tambah” pada hampers atau barang di atas.</p>';
