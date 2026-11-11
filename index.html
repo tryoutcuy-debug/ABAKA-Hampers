@@ -11,6 +11,8 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 :root[data-theme="dark"]{--bg:#1c1613;--card:#2a211d;--tx:#f5ebe6;--mut:#b9a79e;--ac:#f08aa6;--ac2:#3d2430;--bd:#3d322c}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+.bar b{color:var(--ac);font-size:1.15rem}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:Georgia,"Times New Roman",serif;line-height:1.5}
 .wrap{max-width:960px;margin:0 auto;padding:20px 16px 120px}
 header{text-align:center;padding:20px 0 8px}
@@ -141,7 +143,7 @@ function render(){
  $("paket").innerHTML=PAKET.map(function(p){var q=cart[p.id]||0;return '<div class="card'+(q?' sel':'')+'"><div class="em">'+(p.e.includes(".jpeg") || p.e.includes(".jpg") || p.e.includes(".png") ? '<img src="'+p.e+'" class="foto-produk">' : p.e)+'</div><h3>'+p.n+'</h3><small>'+p.d+'</small><div class="pr">'+rp(p.h)+'</div>'+ctrl(p.id,q)+'</div>'}).join("");
  $("custom").innerHTML=BARANG.map(function(g){return '<h2>'+g.g+'</h2><div class="grid">'+g.i.map(function(x){var q=cart[x.id]||0;return '<div class="card'+(q?' sel':'')+'"><div class="em">'+x.e+'</div><h3>'+x.n+'</h3><div class="pr">'+rp(x.h)+'</div>'+ctrl(x.id,q)+'</div>'}).join("")+'</div>'}).join("");
  var ids=Object.keys(cart),tot=0,n=0;
- $("lines").innerHTML=ids.length?ids.map(function(id){var x=all[id],q=cart[id],s=x.h*q;tot+=s;n+=q;return '<div class="row"><span>'+x.e+' '+x.n+' × '+q+'</span><span>'+rp(s)+'</span></div>'}).join(""):'<p class="empty">Belum ada pilihan. Klik “Tambah” pada hampers atau barang di atas.</p>';
+ $("lines").innerHTML=ids.length?ids.map(function(id){var x=all[id],q=cart[id],s=x.h*q;tot+=s;n+=q;return '<div class="row"><span>'+(/\.(jpe?g|png|webp|gif)$/i.test(x.e)?"":x.e+" ")+x.n+' × '+q+'</span><span>'+rp(s)+'</span></div>'}).join(""):'<p class="empty">Belum ada pilihan. Klik “Tambah” pada hampers atau barang di atas.</p>';
  var m=$("antar").checked,ong=0,ongTxt="";
  if(m){var o=ONGKIR[$("jarak").value||0];ong=o.h||0;ongTxt=o.h===null?"Dikonfirmasi admin":(o.h?rp(o.h):"Gratis")}
  var grand=tot+ong;
@@ -155,7 +157,6 @@ function render(){
  L.push("","Subtotal: "+rp(tot));if(m)L.push("Ongkir ("+ONGKIR[$("jarak").value||0].l+"): "+ongTxt);
  L.push("*Total: "+rp(grand)+(ongTxt==="Dikonfirmasi admin"?" + ongkir":"")+"*","","*Data Pemesan*","Nama: "+$("nama").value,"No. HP: "+$("hp").value,"Metode: "+(m?"Diantar":"Ambil sendiri"));
  if(m){L.push("Alamat: "+$("alamat").value,"Kecamatan/Kota: "+$("kota").value,"Patokan: "+($("patokan").value||"-"))}else{L.push("Lokasi ambil: "+LOKASI)}
- L.push("Tanggal "+(m?"kirim":"ambil")+": "+($("tgl").value||"-"),"Catatan: "+($("cat").value||"-"),"","Mohon konfirmasi ketersediaan dan info pembayaran. Terima kasih!");
  L.push("Pembayaran: "+(q?"QRIS (bukti pembayaran akan dikirim)":"Cash"),"Tanggal "+(m?"kirim":"ambil")+": "+($("tgl").value||"-"),"Catatan: "+($("cat").value||"-"),"","Mohon konfirmasi ketersediaan dan info pembayaran. Terima kasih!");
  $("wa").href="https://wa.me/"+WA+"?text="+encodeURIComponent(L.join("\n"));
 }
