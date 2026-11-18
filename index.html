@@ -72,7 +72,7 @@ select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;bac
 <header><h1>🎁 Toko Hampers</h1><p>Pilih paket atau susun isi hampers sesuai selera Anda</p></header>
 <div class="tabs">
 <button class="tab on" data-t="paket">Paket Hampers</button>
-<button class="tab" data-t="custom">Susun Sendiri</button>
+<button class="tab" data-t="custom">Paket Custom</button>
 </div>
 <div id="paket" class="grid"></div>
 <div id="custom" hidden></div>
@@ -121,14 +121,11 @@ var ONGKIR=[{l:"Kurang dari 2 km",h:0},{l:"2 - 5 km",h:5000},{l:"5 - 10 km",h:10
 var SHEET_URL="https://script.google.com/macros/s/AKfycbwHhoXe9_YfnW7UE7xApNRUxiNLMZow1CHJ03SBMKGkNPvIVCTOO0D-kHYGW1_vnWsIPA/exec";
 var QRIS_IMG="qris.jpeg";
 var PAKET=[
-{id:"p1",e:"🍪",n:"Hampers Klasik",d:"",h:30000},
-{id:"p2",e:"🍫",n:"Hampers Cokelat",d:"",h:45000},
-{id:"p3",e:"☕",n:"Hampers Kopi & Teh",d:"",h:25000},
-{id:"p4",e:"💐",n:"Hampers Premium",d:"",h:50000},
-{id:"p5",e:"hampersbuah.jpeg",n:"Hampers Buah",d:"Bisa request buah",h:85000},
-{id:"p6",e:"hampersnastar.jpeg",n:"Hampers Nastar",d:"Kue nastar, dan kue pilihan",h:45000},
-{id:"p7",e:"buketbuah.jpeg",n:"Bucket Buah",d:"Bisa request buah",h:27500},
-{id:"p8",e:"buketbunga.jpeg",n:"Bucket Bunga",d:"Bunga pilihan",h:32000}];
+{id:"p1",e:"pakethemat.jpeg",n:"Paket Hemat",d:"",h:30000},
+{id:"p5",e:"hampersbuah.jpeg",n:"Hampers Buah",d:"Bisa request buah",h:50000},
+{id:"p6",e:"hampersnastar.jpeg",n:"Hampers Nastar",d:"Kue nastar, dan kue pilihan",h:80000},
+{id:"p7",e:"buketbuah.jpeg",n:"Bucket Buah",d:"Bisa request buah",h:35000},
+{id:"p8",e:"buketbunga.jpeg",n:"Bucket Bunga",d:"Bunga pilihan",h:35000}];
 var BARANG=[
 {g:"Kemasan",i:[{id:"b1",e:"📦",n:"Box Standar",h:5000},{id:"b2",e:"🎀",n:"Box Premium",h:15000}]},
 {g:"Makanan & Minuman",i:[{id:"m1",e:"🍪",n:"Kue Kering",h:6500},{id:"m2",e:"🍫",n:"Cokelat",h:15000},{id:"m3",e:"🍵",n:"Teh",h:38000},{id:"m4",e:"☕",n:"Kopi",h:55000},{id:"m5",e:"🍯",n:"Madu",h:85000},{id:"m6",e:"🌴",n:"Kurma",h:70000},{id:"m7",e:"🥤",n:"Sirup",h:48000}]},
